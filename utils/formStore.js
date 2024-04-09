@@ -1,4 +1,3 @@
-// formStore.js
 import { create } from "zustand";
 
 const useFormStore = create((set) => ({
@@ -10,7 +9,6 @@ const useFormStore = create((set) => ({
   width: "",
   height: "",
   weight: "",
-  freightCost: 0, // State for freight cost
   setStep: (step) => set({ step }),
   setTripName: (name) => set({ tripName: name }),
   setTripOrigin: (origin) => set({ tripOrigin: origin }),
@@ -29,15 +27,7 @@ const useFormStore = create((set) => ({
       width: "",
       height: "",
       weight: "",
-      freightCost: 0, // Reset freight cost as well
     }),
-  calculateFreight: () => {
-    // Simple freight cost calculation based on dimensions
-    const volume = parseFloat(length) * parseFloat(width) * parseFloat(height);
-    const costPerCubicMeter = 10; // Example cost per cubic meter
-    const freightCost = volume * costPerCubicMeter;
-    set({ freightCost });
-  },
 }));
 
 export default useFormStore;
