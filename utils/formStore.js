@@ -21,6 +21,7 @@ const useFormStore = create((set) => ({
   highPrice: null,
   inputValue: "",
   options: [],
+  distance: null,
   setStep: (step) => set({ step }),
   setTripName: (name) => set({ tripName: name }),
   setTripOrigin: (origin) => set({ tripOrigin: origin }),
@@ -41,6 +42,7 @@ const useFormStore = create((set) => ({
   setLowPrice: (price) => set({ lowPrice: price }),
   setAveragePrice: (price) => set({ averagePrice: price }),
   setHighPrice: (price) => set({ highPrice: price }),
+  setDistance: (distance) => set({ distance }),
   resetForm: () =>
     set({
       step: 1,
@@ -63,6 +65,7 @@ const useFormStore = create((set) => ({
       lowPrice: null,
       averagePrice: null,
       highPrice: null,
+      distance: null,
     }),
 }));
 

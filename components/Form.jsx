@@ -4,6 +4,7 @@ import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Country, State, City } from "country-state-city";
 import Select from "react-select";
 import { haversineDistance, debounce } from "@/utils/distanceCalculator";
+import { set } from "lodash";
 
 export default function Form() {
   const {
@@ -50,6 +51,8 @@ export default function Form() {
     setLowPrice,
     setAveragePrice,
     setHighPrice,
+    distance,
+    setDistance,
   } = useFormStore();
   const cities = City.getCitiesOfCountry("US");
   // console.log(City.getCitiesOfCountry("US"));
@@ -82,7 +85,9 @@ export default function Form() {
   // Handlers for react-select
   const handleOriginChange = (selectedOption) => {
     const originCity = cities.find(
-      (city) => city.name === selectedOption.value.split(",")[0].trim()
+      (city) =>
+        city.name === selectedOption.value.split(",")[0].trim() &&
+        city.stateCode === selectedOption.value.split(",")[1].trim()
     );
     setTripOrigin(originCity);
     if (originCity) {
@@ -93,7 +98,9 @@ export default function Form() {
 
   const handleDestinationChange = (selectedOption) => {
     const destCity = cities.find(
-      (city) => city.name === selectedOption.value.split(",")[0].trim()
+      (city) =>
+        city.name === selectedOption.value.split(",")[0].trim() &&
+        city.stateCode === selectedOption.value.split(",")[1].trim()
     );
     setTripDestination(destCity);
     if (destCity) {
@@ -126,7 +133,7 @@ export default function Form() {
         tripDestinationLon
       );
     }
-
+    setDistance(distance);
     // Calculate base prices, additional costs, and weight cost for each category
     const calculatePrice = (
       basePrice,
@@ -200,49 +207,33 @@ export default function Form() {
     // setCalculatedPrice(null); // Reset calculated price when form is reset
   };
 
-  // const calculateDistance = () => {
-  //   if (tripOriginLat && tripDestinationLat) {
-  //     const distance = haversineDistance(
-  //       tripOriginLat,
-  //       tripOriginLon,
-  //       tripDestinationLat,
-  //       tripDestinationLon
-  //     );
-  //     console.log(`Distance: ${distance.toFixed(2)} miles`);
-  //   }
-  // };
-
-  // Calculate distance when origin and destination are set
-  // useEffect(() => {
-  //   calculateDistance();
-  // }, [tripOriginLat, tripDestinationLat]);
   console.log(tripOrigin);
   return (
-    <div className='md:w-1/2 w-full bg-white p-6 rounded-lg h-full md:h-[100vh] md:overflow-auto flex flex-col justify-center items-center'>
-      <h2 className='text-4xl font-semibold mb-6 text-black'>Calculator</h2>
-      <form onSubmit={handleSubmit} className='w-full md:w-2/3'>
+    <div className="md:w-1/2 w-full bg-white p-6 rounded-lg h-full md:h-[100vh] md:overflow-auto flex flex-col justify-center items-center">
+      <h2 className="text-4xl font-semibold mb-6 text-black">Calculator</h2>
+      <form onSubmit={handleSubmit} className="w-full md:w-2/3">
         {step === 1 && (
           <>
-            <div className='mb-2'>
-              <label htmlFor='tripName' className='block mb-1 text-black'>
+            <div className="mb-2">
+              <label htmlFor="tripName" className="block mb-1 text-black">
                 Trip Name*:
               </label>
               <input
-                type='text'
-                id='tripName'
+                type="text"
+                id="tripName"
                 value={tripName}
                 onChange={(e) => setTripName(e.target.value)}
-                placeholder='Enter trip name'
-                className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                placeholder="Enter trip name"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
                 style={{ color: "black" }}
               />
             </div>
-            <div className='mb-2'>
-              <label htmlFor='tripOrigin' className='block mb-1 text-black'>
+            <div className="mb-2">
+              <label htmlFor="tripOrigin" className="block mb-1 text-black">
                 Trip Origin*:
               </label>
               <Select
-                id='tripOrigin'
+                id="tripOrigin"
                 options={options}
                 value={
                   tripOrigin && {
@@ -251,21 +242,21 @@ export default function Form() {
                   }
                 }
                 onChange={handleOriginChange}
-                placeholder='Select trip origin'
-                className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                placeholder="Select trip origin"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
                 onInputChange={setInputValue} // Update inputValue state on input change
               />
             </div>
 
-            <div className='mb-2'>
+            <div className="mb-2">
               <label
-                htmlFor='tripDestination'
-                className='block mb-1 text-black'
+                htmlFor="tripDestination"
+                className="block mb-1 text-black"
               >
                 Trip Destination*:
               </label>
               <Select
-                id='tripDestination'
+                id="tripDestination"
                 options={options}
                 value={
                   tripDestination && {
@@ -274,15 +265,15 @@ export default function Form() {
                   }
                 }
                 onChange={handleDestinationChange}
-                placeholder='Select trip destination'
-                className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                placeholder="Select trip destination"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
                 onInputChange={setInputValue} // Update inputValue state on input change
               />
             </div>
             <button
-              type='button'
+              type="button"
               onClick={nextStep}
-              className='bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 flex items-center justify-center transition-all duration-300 ease-in-out'
+              className="bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 flex items-center justify-center transition-all duration-300 ease-in-out"
             >
               <ArrowRight size={20} />
             </button>
@@ -290,25 +281,25 @@ export default function Form() {
         )}
         {step === 2 && (
           <>
-            <div className='mb-2 flex justify-between items-center gap-2'>
-              <div className='w-full'>
-                <label htmlFor='length' className='block mb-1 text-black'>
+            <div className="mb-2 flex justify-between items-center gap-2">
+              <div className="w-full">
+                <label htmlFor="length" className="block mb-1 text-black">
                   Length:
                 </label>
-                <div className='flex items-center gap-x-3'>
+                <div className="flex items-center gap-x-3">
                   <input
-                    type='number'
-                    id='length'
+                    type="number"
+                    id="length"
                     value={length}
                     min={0}
                     onChange={(e) => setLength(e.target.value)}
-                    placeholder='Ft'
-                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    placeholder="Ft"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
                     style={{ color: "black" }}
                   />{" "}
                   <input
-                    type='number'
-                    id='lengthInches'
+                    type="number"
+                    id="lengthInches"
                     value={lengthInches}
                     max={11}
                     min={0}
@@ -323,32 +314,32 @@ export default function Form() {
                       }
                       setLengthInches(e.target.value);
                     }}
-                    placeholder='Inches'
-                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    placeholder="Inches"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
                     style={{ color: "black" }}
                   />
                 </div>
               </div>
             </div>
-            <div className='mb-2 flex justify-between items-center gap-2'>
-              <div className='w-full'>
-                <label htmlFor='width' className='block mb-1 text-black'>
+            <div className="mb-2 flex justify-between items-center gap-2">
+              <div className="w-full">
+                <label htmlFor="width" className="block mb-1 text-black">
                   Width
                 </label>
-                <div className='flex items-center gap-x-3 '>
+                <div className="flex items-center gap-x-3 ">
                   <input
-                    type='number'
-                    id='width'
+                    type="number"
+                    id="width"
                     min={0}
                     value={width}
                     onChange={(e) => setWidth(e.target.value)}
-                    placeholder='Ft'
-                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    placeholder="Ft"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
                     style={{ color: "black" }}
                   />
                   <input
-                    type='number'
-                    id='widthInches'
+                    type="number"
+                    id="widthInches"
                     max={11}
                     min={0}
                     value={widthInches}
@@ -363,34 +354,34 @@ export default function Form() {
                       }
                       setWidthInches(e.target.value);
                     }}
-                    placeholder='Inches'
-                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    placeholder="Inches"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
                     style={{ color: "black" }}
                   />
                 </div>
               </div>
             </div>
-            <div className='mb-2 flex justify-between items-center gap-2'>
-              <div className='w-full'>
-                <label htmlFor='height' className='block mb-1 text-black'>
+            <div className="mb-2 flex justify-between items-center gap-2">
+              <div className="w-full">
+                <label htmlFor="height" className="block mb-1 text-black">
                   Height
                 </label>
-                <div className='flex items-center gap-x-3'>
+                <div className="flex items-center gap-x-3">
                   <input
-                    type='number'
-                    id='height'
+                    type="number"
+                    id="height"
                     min={0}
                     value={height}
                     onChange={(e) => setHeight(e.target.value)}
-                    placeholder='Ft'
-                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    placeholder="Ft"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
                     style={{ color: "black" }}
                   />
                   <input
                     max={11}
                     min={0}
-                    type='number'
-                    id='heightInches'
+                    type="number"
+                    id="heightInches"
                     value={heightInches}
                     onChange={(e) => {
                       if (e.target.value > 11) {
@@ -403,39 +394,39 @@ export default function Form() {
                       }
                       setHeightInches(e.target.value);
                     }}
-                    placeholder='Inches'
-                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    placeholder="Inches"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
                     style={{ color: "black" }}
                   />
                 </div>
               </div>
             </div>
-            <div className='mb-2'>
-              <label htmlFor='weight' className='block mb-1 text-black'>
+            <div className="mb-2">
+              <label htmlFor="weight" className="block mb-1 text-black">
                 Weight (in lbs):
               </label>
               <input
-                type='number'
-                id='weight'
+                type="number"
+                id="weight"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                placeholder='Enter weight in lbs'
-                className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                placeholder="Enter weight in lbs"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
                 style={{ color: "black" }}
               />
             </div>
 
-            <div className='flex justify-between items-center'>
+            <div className="flex justify-between items-center">
               <button
-                type='button'
+                type="button"
                 onClick={prevStep}
-                className='bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 flex items-center justify-center transition-all duration-300 ease-in-out'
+                className="bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 flex items-center justify-center transition-all duration-300 ease-in-out"
               >
                 <ArrowLeft size={20} />
               </button>
               <button
-                type='submit'
-                className='bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 transition-all duration-300 ease-in-out'
+                type="submit"
+                className="bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 transition-all duration-300 ease-in-out"
               >
                 Calculate
               </button>
@@ -444,35 +435,37 @@ export default function Form() {
         )}
         {/* Reset button */}
         <button
-          type='button'
+          type="button"
           onClick={handleReset}
-          className='bg-gray-200 text-black py-2 px-4 rounded mt-4 focus:outline-none focus:ring-0 transition-all duration-300 ease-in-out'
+          className="bg-gray-200 text-black py-2 px-4 rounded mt-4 focus:outline-none focus:ring-0 transition-all duration-300 ease-in-out"
         >
           Reset Form
         </button>
       </form>
       {/* Display calculated price */}
-      {lowPrice && averagePrice && highPrice && (
-        <div className='mt-4'>
-          <h3 className='text-xl font-semibold text-black'>
-            Calculated Prices:
+      {lowPrice && averagePrice && highPrice && distance && (
+        <div className="mt-4">
+          <h3 className="text-xl font-semibold text-black">
+            Calculated Prices for {distance.toFixed(2)} miles:
           </h3>
-          <p className='text-black'>
-            <span className='font-bold'>Lowball Price:</span> $
-            {lowPrice.toFixed(2)}
-          </p>
-          <p className='text-black'>
-            <span className='font-bold'>Average Price:</span> $
-            {averagePrice.toFixed(2)}
-          </p>
-          <p className='text-black'>
-            <span className='font-bold'>HotZone Price:</span> $
-            {highPrice.toFixed(2)}
-          </p>
+          <div className="flex justify-center items-center flex-col">
+            <p className="text-black">
+              <span className="font-bold">Lowball Price:</span> $
+              {lowPrice.toFixed(2)}
+            </p>
+            <p className="text-black">
+              <span className="font-bold">Average Price:</span> $
+              {averagePrice.toFixed(2)}
+            </p>
+            <p className="text-black">
+              <span className="font-bold">HotZone Price:</span> $
+              {highPrice.toFixed(2)}
+            </p>
+          </div>
         </div>
       )}
       {/* Step indicators */}
-      <div className='flex justify-center mt-4'>
+      <div className="flex justify-center mt-4">
         {[1, 2].map((s) => (
           <div
             key={s}
