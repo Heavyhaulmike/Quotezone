@@ -44,6 +44,12 @@ export default function Form() {
     setInputValue,
     setOptions,
     resetForm,
+    lowPrice,
+    averagePrice,
+    highPrice,
+    setLowPrice,
+    setAveragePrice,
+    setHighPrice,
   } = useFormStore();
   // console.log(City.getCitiesOfCountry("US"));
 
@@ -169,6 +175,9 @@ export default function Form() {
 
     // Set the calculated prices to state (if needed)
     // setCalculatedPrice({ lowball: lowballPrice, average: averagePrice, hotZone: hotZonePrice });
+    setLowPrice(lowballPrice);
+    setAveragePrice(averagePrice);
+    setHighPrice(hotZonePrice);
   };
 
   const nextStep = () => {
@@ -404,12 +413,25 @@ export default function Form() {
         </button>
       </form>
       {/* Display calculated price */}
-      {/* {calculatedPrice !== null && (
-        <p className="mt-4 text-black">
-          <span className="font-bold">Calculated Price: </span>$
-          {calculatedPrice.toFixed(2)}
-        </p>
-      )} */}
+      {lowPrice && averagePrice && highPrice && (
+        <div className="mt-4">
+          <h3 className="text-xl font-semibold text-black">
+            Calculated Prices:
+          </h3>
+          <p className="text-black">
+            <span className="font-bold">Lowball Price:</span> $
+            {lowPrice.toFixed(2)}
+          </p>
+          <p className="text-black">
+            <span className="font-bold">Average Price:</span> $
+            {averagePrice.toFixed(2)}
+          </p>
+          <p className="text-black">
+            <span className="font-bold">HotZone Price:</span> $
+            {highPrice.toFixed(2)}
+          </p>
+        </div>
+      )}
       {/* Step indicators */}
       <div className="flex justify-center mt-4">
         {[1, 2].map((s) => (

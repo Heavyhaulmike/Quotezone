@@ -16,7 +16,9 @@ const useFormStore = create((set) => ({
   lengthInches: 0,
   widthInches: 0,
   heightInches: 0,
-  calculatedPrice: null,
+  lowPrice: null,
+  averagePrice: null,
+  highPrice: null,
   inputValue: "",
   options: [],
   setStep: (step) => set({ step }),
@@ -34,9 +36,11 @@ const useFormStore = create((set) => ({
   setLengthInches: (inches) => set({ lengthInches: inches }),
   setWidthInches: (inches) => set({ widthInches: inches }),
   setHeightInches: (inches) => set({ heightInches: inches }),
-  setCalculatedPrice: (price) => set({ calculatedPrice: price }),
   setInputValue: (value) => set({ inputValue: value }),
   setOptions: (options) => set({ options: options }),
+  setLowPrice: (price) => set({ lowPrice: price }),
+  setAveragePrice: (price) => set({ averagePrice: price }),
+  setHighPrice: (price) => set({ highPrice: price }),
   resetForm: () =>
     set({
       step: 1,
@@ -54,9 +58,11 @@ const useFormStore = create((set) => ({
       lengthInches: 0,
       widthInches: 0,
       heightInches: 0,
-      calculatedPrice: null,
       inputValue: "",
       options: [],
+      lowPrice: null,
+      averagePrice: null,
+      highPrice: null,
     }),
 }));
 
