@@ -58,7 +58,7 @@ export default function Form() {
   const debouncedFetch = useCallback(
     debounce((input) => {
       const fetchedOptions = cities
-        .slice(0, 1000)
+
         .filter((city) =>
           city.name.toLowerCase().startsWith(input.toLowerCase())
         )
@@ -67,7 +67,7 @@ export default function Form() {
           label: `${city.name}, ${city.stateCode}`,
         }));
       setOptions(fetchedOptions);
-    }, 150),
+    }, 1000),
     [] // Empty dependency array means the debounced function is only created once
   );
 
