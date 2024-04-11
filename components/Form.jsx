@@ -51,19 +51,23 @@ export default function Form() {
     setAveragePrice,
     setHighPrice,
   } = useFormStore();
+  const cities = City.getCitiesOfCountry("US");
   // console.log(City.getCitiesOfCountry("US"));
 
   // Debounce function
   const debouncedFetch = useCallback(
     debounce((input) => {
-      const fetchedOptions = City.getCitiesOfCountry("US")
-        .filter((city) => city.name.toLowerCase().includes(input.toLowerCase()))
+      const fetchedOptions = cities
+        .slice(0, 1000)
+        .filter((city) =>
+          city.name.toLowerCase().startsWith(input.toLowerCase())
+        )
         .map((city) => ({
           value: `${city.name}, ${city.stateCode}`,
           label: `${city.name}, ${city.stateCode}`,
         }));
       setOptions(fetchedOptions);
-    }, 1000),
+    }, 150),
     [] // Empty dependency array means the debounced function is only created once
   );
 
@@ -77,10 +81,10 @@ export default function Form() {
 
   // Handlers for react-select
   const handleOriginChange = (selectedOption) => {
-    setTripOrigin(selectedOption.value);
-    const originCity = City.getCitiesOfCountry("US").find(
+    const originCity = cities.find(
       (city) => city.name === selectedOption.value.split(",")[0].trim()
     );
+    setTripOrigin(originCity);
     if (originCity) {
       setTripOriginLat(originCity.latitude);
       setTripOriginLon(originCity.longitude);
@@ -88,10 +92,10 @@ export default function Form() {
   };
 
   const handleDestinationChange = (selectedOption) => {
-    setTripDestination(selectedOption.value);
-    const destCity = City.getCitiesOfCountry("US").find(
+    const destCity = cities.find(
       (city) => city.name === selectedOption.value.split(",")[0].trim()
     );
+    setTripDestination(destCity);
     if (destCity) {
       setTripDestinationLat(destCity.latitude);
       setTripDestinationLon(destCity.longitude);
@@ -106,12 +110,6 @@ export default function Form() {
     const widthInInches = width * 12 + widthInches;
     const lengthInInches = length * 12 + lengthInches;
     const heightInInches = height * 12 + heightInches;
-
-    //dimensions should be less that 12
-    if (widthInches > 12 || lengthInches > 12 || heightInches > 12) {
-      alert("Dimensions in inches should be less than 12 inches");
-      return;
-    }
 
     // Calculate distance between origin and destination
     let distance = 0;
@@ -139,10 +137,9 @@ export default function Form() {
     ) => {
       const additionalCost =
         widthOverBase * 0.1 + lengthOverBase * 0.15 + heightOverBase * 0.15;
-      const weightCost = weight * 0.1; // Example weight cost calculation
-      // Adjust base price based on distance (example: increase cost per mile for longer distances)
-      const distanceCost = distance * 0.05; // Example: increase cost by 5% per mile
-      return basePrice + additionalCost + weightCost + distanceCost;
+      const weightCost = Math.max(0, weight - 30000) * 0; // Example weight cost calculation
+
+      return (basePrice + additionalCost + weightCost) * distance;
     };
 
     // Determine base prices and calculate prices for each category
@@ -200,7 +197,7 @@ export default function Form() {
 
   const handleReset = () => {
     resetForm();
-    setCalculatedPrice(null); // Reset calculated price when form is reset
+    // setCalculatedPrice(null); // Reset calculated price when form is reset
   };
 
   // const calculateDistance = () => {
@@ -219,61 +216,73 @@ export default function Form() {
   // useEffect(() => {
   //   calculateDistance();
   // }, [tripOriginLat, tripDestinationLat]);
-
+  console.log(tripOrigin);
   return (
-    <div className="md:w-1/2 w-full bg-white p-6 rounded-lg h-full md:h-[100vh] md:overflow-auto flex flex-col justify-center items-center">
-      <h2 className="text-4xl font-semibold mb-6 text-black">Calculator</h2>
-      <form onSubmit={handleSubmit} className="w-full md:w-2/3">
+    <div className='md:w-1/2 w-full bg-white p-6 rounded-lg h-full md:h-[100vh] md:overflow-auto flex flex-col justify-center items-center'>
+      <h2 className='text-4xl font-semibold mb-6 text-black'>Calculator</h2>
+      <form onSubmit={handleSubmit} className='w-full md:w-2/3'>
         {step === 1 && (
           <>
-            <div className="mb-2">
-              <label htmlFor="tripName" className="block mb-1 text-black">
-                Trip Name:
+            <div className='mb-2'>
+              <label htmlFor='tripName' className='block mb-1 text-black'>
+                Trip Name*:
               </label>
               <input
-                type="text"
-                id="tripName"
+                type='text'
+                id='tripName'
                 value={tripName}
                 onChange={(e) => setTripName(e.target.value)}
-                placeholder="Enter trip name"
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
+                placeholder='Enter trip name'
+                className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
                 style={{ color: "black" }}
               />
             </div>
-            <div className="mb-2">
-              <label htmlFor="tripOrigin" className="block mb-1 text-black">
-                Trip Origin:
+            <div className='mb-2'>
+              <label htmlFor='tripOrigin' className='block mb-1 text-black'>
+                Trip Origin*:
               </label>
               <Select
-                id="tripOrigin"
+                id='tripOrigin'
                 options={options}
+                value={
+                  tripOrigin && {
+                    value: `${tripOrigin?.name}, ${tripOrigin?.stateCode}`,
+                    label: `${tripOrigin?.name}, ${tripOrigin?.stateCode}`,
+                  }
+                }
                 onChange={handleOriginChange}
-                placeholder="Select trip origin"
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
+                placeholder='Select trip origin'
+                className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
                 onInputChange={setInputValue} // Update inputValue state on input change
               />
             </div>
 
-            <div className="mb-2">
+            <div className='mb-2'>
               <label
-                htmlFor="tripDestination"
-                className="block mb-1 text-black"
+                htmlFor='tripDestination'
+                className='block mb-1 text-black'
               >
-                Trip Destination:
+                Trip Destination*:
               </label>
               <Select
-                id="tripDestination"
+                id='tripDestination'
                 options={options}
+                value={
+                  tripDestination && {
+                    value: `${tripDestination?.name}, ${tripDestination?.stateCode}`,
+                    label: `${tripDestination?.name}, ${tripDestination?.stateCode}`,
+                  }
+                }
                 onChange={handleDestinationChange}
-                placeholder="Select trip destination"
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
+                placeholder='Select trip destination'
+                className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
                 onInputChange={setInputValue} // Update inputValue state on input change
               />
             </div>
             <button
-              type="button"
+              type='button'
               onClick={nextStep}
-              className="bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 flex items-center justify-center transition-all duration-300 ease-in-out"
+              className='bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 flex items-center justify-center transition-all duration-300 ease-in-out'
             >
               <ArrowRight size={20} />
             </button>
@@ -281,122 +290,152 @@ export default function Form() {
         )}
         {step === 2 && (
           <>
-            <div className="mb-2 flex justify-between items-center gap-2">
-              <div className="w-1/2">
-                <label htmlFor="length" className="block mb-1 text-black">
-                  Length (in ft):
+            <div className='mb-2 flex justify-between items-center gap-2'>
+              <div className='w-full'>
+                <label htmlFor='length' className='block mb-1 text-black'>
+                  Length:
                 </label>
-                <input
-                  type="number"
-                  id="length"
-                  value={length}
-                  onChange={(e) => setLength(e.target.value)}
-                  placeholder="Enter length in ft"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
-                  style={{ color: "black" }}
-                />
-              </div>
-              <div className="w-1/2">
-                <label htmlFor="lengthInches" className="block mb-1 text-black">
-                  Length (in inches):
-                </label>
-                <input
-                  type="number"
-                  id="lengthInches"
-                  value={lengthInches}
-                  onChange={(e) => setLengthInches(e.target.value)}
-                  placeholder="Enter length in inches"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
-                  style={{ color: "black" }}
-                />
-              </div>
-            </div>
-            <div className="mb-2 flex justify-between items-center gap-2">
-              <div className="w-1/2">
-                <label htmlFor="width" className="block mb-1 text-black">
-                  Width (in ft):
-                </label>
-                <input
-                  type="number"
-                  id="width"
-                  value={width}
-                  onChange={(e) => setWidth(e.target.value)}
-                  placeholder="Enter width in ft"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
-                  style={{ color: "black" }}
-                />
-              </div>
-              <div className="w-1/2">
-                <label htmlFor="widthInches" className="block mb-1 text-black">
-                  Width (in inches):
-                </label>
-                <input
-                  type="number"
-                  id="widthInches"
-                  value={widthInches}
-                  onChange={(e) => setWidthInches(e.target.value)}
-                  placeholder="Enter width in inches"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
-                  style={{ color: "black" }}
-                />
+                <div className='flex items-center gap-x-3'>
+                  <input
+                    type='number'
+                    id='length'
+                    value={length}
+                    min={0}
+                    onChange={(e) => setLength(e.target.value)}
+                    placeholder='Ft'
+                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    style={{ color: "black" }}
+                  />{" "}
+                  <input
+                    type='number'
+                    id='lengthInches'
+                    value={lengthInches}
+                    max={11}
+                    min={0}
+                    onChange={(e) => {
+                      if (e.target.value > 11) {
+                        setLengthInches(11);
+                        return;
+                      }
+                      if (e.target.value < 0) {
+                        setLengthInches(0);
+                        return;
+                      }
+                      setLengthInches(e.target.value);
+                    }}
+                    placeholder='Inches'
+                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    style={{ color: "black" }}
+                  />
+                </div>
               </div>
             </div>
-            <div className="mb-2 flex justify-between items-center gap-2">
-              <div className="w-1/2">
-                <label htmlFor="height" className="block mb-1 text-black">
-                  Height (in ft):
+            <div className='mb-2 flex justify-between items-center gap-2'>
+              <div className='w-full'>
+                <label htmlFor='width' className='block mb-1 text-black'>
+                  Width
                 </label>
-                <input
-                  type="number"
-                  id="height"
-                  value={height}
-                  onChange={(e) => setHeight(e.target.value)}
-                  placeholder="Enter height in ft"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
-                  style={{ color: "black" }}
-                />
-              </div>
-              <div className="w-1/2">
-                <label htmlFor="heightInches" className="block mb-1 text-black">
-                  Height (in inches):
-                </label>
-                <input
-                  type="number"
-                  id="heightInches"
-                  value={heightInches}
-                  onChange={(e) => setHeightInches(e.target.value)}
-                  placeholder="Enter height in inches"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
-                  style={{ color: "black" }}
-                />
+                <div className='flex items-center gap-x-3 '>
+                  <input
+                    type='number'
+                    id='width'
+                    min={0}
+                    value={width}
+                    onChange={(e) => setWidth(e.target.value)}
+                    placeholder='Ft'
+                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    style={{ color: "black" }}
+                  />
+                  <input
+                    type='number'
+                    id='widthInches'
+                    max={11}
+                    min={0}
+                    value={widthInches}
+                    onChange={(e) => {
+                      if (e.target.value > 11) {
+                        setLengthInches(11);
+                        return;
+                      }
+                      if (e.target.value < 0) {
+                        setLengthInches(0);
+                        return;
+                      }
+                      setWidthInches(e.target.value);
+                    }}
+                    placeholder='Inches'
+                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    style={{ color: "black" }}
+                  />
+                </div>
               </div>
             </div>
-            <div className="mb-2">
-              <label htmlFor="weight" className="block mb-1 text-black">
+            <div className='mb-2 flex justify-between items-center gap-2'>
+              <div className='w-full'>
+                <label htmlFor='height' className='block mb-1 text-black'>
+                  Height
+                </label>
+                <div className='flex items-center gap-x-3'>
+                  <input
+                    type='number'
+                    id='height'
+                    min={0}
+                    value={height}
+                    onChange={(e) => setHeight(e.target.value)}
+                    placeholder='Ft'
+                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    style={{ color: "black" }}
+                  />
+                  <input
+                    max={11}
+                    min={0}
+                    type='number'
+                    id='heightInches'
+                    value={heightInches}
+                    onChange={(e) => {
+                      if (e.target.value > 11) {
+                        setHeightInches(11);
+                        return;
+                      }
+                      if (e.target.value < 0) {
+                        setHeightInches(0);
+                        return;
+                      }
+                      setHeightInches(e.target.value);
+                    }}
+                    placeholder='Inches'
+                    className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
+                    style={{ color: "black" }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className='mb-2'>
+              <label htmlFor='weight' className='block mb-1 text-black'>
                 Weight (in lbs):
               </label>
               <input
-                type="number"
-                id="weight"
+                type='number'
+                id='weight'
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                placeholder="Enter weight in lbs"
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0"
+                placeholder='Enter weight in lbs'
+                className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-0'
                 style={{ color: "black" }}
               />
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className='flex justify-between items-center'>
               <button
-                type="button"
+                type='button'
                 onClick={prevStep}
-                className="bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 flex items-center justify-center transition-all duration-300 ease-in-out"
+                className='bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 flex items-center justify-center transition-all duration-300 ease-in-out'
               >
                 <ArrowLeft size={20} />
               </button>
               <button
-                type="submit"
-                className="bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 transition-all duration-300 ease-in-out"
+                type='submit'
+                className='bg-black text-white py-2 px-4 rounded hover:scale-105 focus:outline-none focus:ring-0 transition-all duration-300 ease-in-out'
               >
                 Calculate
               </button>
@@ -405,35 +444,35 @@ export default function Form() {
         )}
         {/* Reset button */}
         <button
-          type="button"
+          type='button'
           onClick={handleReset}
-          className="bg-gray-200 text-black py-2 px-4 rounded mt-4 focus:outline-none focus:ring-0 transition-all duration-300 ease-in-out"
+          className='bg-gray-200 text-black py-2 px-4 rounded mt-4 focus:outline-none focus:ring-0 transition-all duration-300 ease-in-out'
         >
           Reset Form
         </button>
       </form>
       {/* Display calculated price */}
       {lowPrice && averagePrice && highPrice && (
-        <div className="mt-4">
-          <h3 className="text-xl font-semibold text-black">
+        <div className='mt-4'>
+          <h3 className='text-xl font-semibold text-black'>
             Calculated Prices:
           </h3>
-          <p className="text-black">
-            <span className="font-bold">Lowball Price:</span> $
+          <p className='text-black'>
+            <span className='font-bold'>Lowball Price:</span> $
             {lowPrice.toFixed(2)}
           </p>
-          <p className="text-black">
-            <span className="font-bold">Average Price:</span> $
+          <p className='text-black'>
+            <span className='font-bold'>Average Price:</span> $
             {averagePrice.toFixed(2)}
           </p>
-          <p className="text-black">
-            <span className="font-bold">HotZone Price:</span> $
+          <p className='text-black'>
+            <span className='font-bold'>HotZone Price:</span> $
             {highPrice.toFixed(2)}
           </p>
         </div>
       )}
       {/* Step indicators */}
-      <div className="flex justify-center mt-4">
+      <div className='flex justify-center mt-4'>
         {[1, 2].map((s) => (
           <div
             key={s}
