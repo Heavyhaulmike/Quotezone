@@ -117,10 +117,15 @@ export default function Form() {
     const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${apiKey}`;
 
     try {
-      const response = await axios.post("/api/calculateDistance");
-      // const result = response.data;
-      // const distanceInMeters = result.rows[0].elements[0].distance.value;
-      // console.log(distanceInMeters);
+      const response = await axios.post("/api/calculateDistance", {
+        origin: tripOriginLat + "," + tripOriginLon,
+        destination: tripDestinationLat + "," + tripDestinationLon,
+      });
+      const result = response.data;
+
+      const distanceInMiles = result.distanceInMiles;
+      console.log(distanceInMiles);
+      return distanceInMiles;
     } catch (error) {
       console.error("Error fetching data: ", error);
     }
@@ -134,23 +139,23 @@ export default function Form() {
     const widthInInches = width * 12 + widthInches;
     const lengthInInches = length * 12 + lengthInches;
     const heightInInches = height * 12 + heightInches;
-    // await calculateDistance();
+    const distanceInMiles = await calculateDistance();
     // Calculate distance between origin and destination
-    let distance = 0;
-    if (
-      tripOriginLat &&
-      tripDestinationLat &&
-      tripOriginLon &&
-      tripDestinationLon
-    ) {
-      distance = haversineDistance(
-        tripOriginLat,
-        tripOriginLon,
-        tripDestinationLat,
-        tripDestinationLon
-      );
-    }
-    setDistance(distance);
+    // let distance = 0;
+    // if (
+    //   tripOriginLat &&
+    //   tripDestinationLat &&
+    //   tripOriginLon &&
+    //   tripDestinationLon
+    // ) {
+    //   distance = haversineDistance(
+    //     tripOriginLat,
+    //     tripOriginLon,
+    //     tripDestinationLat,
+    //     tripDestinationLon
+    //   );
+    // }
+    setDistance(distanceInMiles);
     // Calculate base prices, additional costs, and weight cost for each category
     const calculatePrice = (
       basePrice,
@@ -165,7 +170,10 @@ export default function Form() {
         heightOverBase * 0.0015;
       const weightCost = Math.max(0, weight - 30000) * 0.000015; // Example weight cost calculation
 
-      return (basePrice + additionalCost + weightCost) * distance + distance;
+      return (
+        (basePrice + additionalCost + weightCost) * distance +
+        (distance < 300 ? distance : 0)
+      );
     };
 
     // Determine base prices and calculate prices for each category
@@ -174,21 +182,21 @@ export default function Form() {
       Math.max(0, widthInInches - 108),
       Math.max(0, lengthInInches - 312),
       Math.max(0, heightInInches - 144),
-      distance
+      distanceInMiles
     );
     const averagePrice = calculatePrice(
       5.0,
       Math.max(0, widthInInches - 108),
       Math.max(0, lengthInInches - 312),
       Math.max(0, heightInInches - 144),
-      distance
+      distanceInMiles
     );
     const hotZonePrice = calculatePrice(
       6.5,
       Math.max(0, widthInInches - 108),
       Math.max(0, lengthInInches - 312),
       Math.max(0, heightInInches - 144),
-      distance
+      distanceInMiles
     );
 
     // Display calculated prices
@@ -226,7 +234,6 @@ export default function Form() {
     // setCalculatedPrice(null); // Reset calculated price when form is reset
   };
 
-  console.log(tripOrigin);
   return (
     <div className='md:w-1/2 w-full bg-white p-6 rounded-lg h-full md:h-[100vh] md:overflow-auto flex flex-col justify-center items-center'>
       <h2 className='text-4xl font-semibold mb-6 text-black'>Calculator</h2>
@@ -464,20 +471,20 @@ export default function Form() {
       {/* Display calculated price */}
       {lowPrice && averagePrice && highPrice && distance && (
         <div className='mt-4'>
-          <h3 className='text-xl font-semibold text-black'>
-            Calculated Prices for {distance.toFixed(2)} miles:
+          <h3 className='text-xl  text-black'>
+            Calculated Prices for{" "}
+            <span className='font-semibold'>{distance.toFixed(2)}</span> miles:
           </h3>
           <div className='flex justify-center items-center flex-col'>
             <p className='text-black'>
-              <span className='font-bold'>Lowball Price:</span> $
-              {lowPrice.toFixed(2)}
+              <span className='font-bold'>Low:</span> ${lowPrice.toFixed(2)}
             </p>
             <p className='text-black'>
-              <span className='font-bold'>Average Price:</span> $
+              <span className='font-bold'>Average:</span> $
               {averagePrice.toFixed(2)}
             </p>
             <p className='text-black'>
-              <span className='font-bold'>HotZone Price:</span> $
+              <span className='font-bold'>Hot Load:</span> $
               {highPrice.toFixed(2)}
             </p>
           </div>
