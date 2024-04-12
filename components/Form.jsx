@@ -4,8 +4,7 @@ import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Country, State, City } from "country-state-city";
 import Select from "react-select";
 import { haversineDistance, debounce } from "@/utils/distanceCalculator";
-import { set } from "lodash";
-
+import axios from "axios";
 export default function Form() {
   const {
     step,
@@ -109,7 +108,25 @@ export default function Form() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const calculateDistance = async () => {
+    console.log("here");
+    const apiKey = "AIzaSyASHlkc8gu6HG-hw8Y37SWHnTt0lsrt_kg";
+    const origin = "37.7749,-122.4194"; // San Francisco
+    const destination = "34.0522,-118.2437"; // Los Angeles
+
+    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${apiKey}`;
+
+    try {
+      const response = await axios.post("/api/calculateDistance");
+      // const result = response.data;
+      // const distanceInMeters = result.rows[0].elements[0].distance.value;
+      // console.log(distanceInMeters);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Form submitted!");
 
@@ -117,7 +134,7 @@ export default function Form() {
     const widthInInches = width * 12 + widthInches;
     const lengthInInches = length * 12 + lengthInches;
     const heightInInches = height * 12 + heightInches;
-    console.log(widthInInches, lengthInInches, heightInInches);
+    // await calculateDistance();
     // Calculate distance between origin and destination
     let distance = 0;
     if (
@@ -147,8 +164,8 @@ export default function Form() {
         lengthOverBase * 0.0015 +
         heightOverBase * 0.0015;
       const weightCost = Math.max(0, weight - 30000) * 0.000015; // Example weight cost calculation
-      console.log(basePrice + additionalCost + weightCost);
-      return (basePrice + additionalCost + weightCost) * distance;
+
+      return (basePrice + additionalCost + weightCost) * distance + distance;
     };
 
     // Determine base prices and calculate prices for each category
