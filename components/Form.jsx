@@ -135,26 +135,21 @@ export default function Form() {
     e.preventDefault();
     console.log("Form submitted!");
 
+    console.log("Length: ", length, "ft", lengthInches, "in");
+    console.log("Width: ", width, "ft", widthInches, "in");
+    console.log("Height: ", height, "ft", heightInches, "in");
+    console.log("Weight: ", weight, "lbs");
     // Convert dimensions to inches
-    const widthInInches = width * 12 + widthInches;
-    const lengthInInches = length * 12 + lengthInches;
-    const heightInInches = height * 12 + heightInches;
+    const widthInInches = width * 12 + parseInt(widthInches || 0);
+    const lengthInInches = length * 12 + parseInt(lengthInches || 0);
+    const heightInInches = height * 12 + parseInt(heightInches || 0);
     const distanceInMiles = await calculateDistance();
-    // Calculate distance between origin and destination
-    // let distance = 0;
-    // if (
-    //   tripOriginLat &&
-    //   tripDestinationLat &&
-    //   tripOriginLon &&
-    //   tripDestinationLon
-    // ) {
-    //   distance = haversineDistance(
-    //     tripOriginLat,
-    //     tripOriginLon,
-    //     tripDestinationLat,
-    //     tripDestinationLon
-    //   );
-    // }
+
+    console.log("Distance: ", distanceInMiles, "miles");
+    console.log("width in inces", widthInInches);
+    console.log("length in inches", lengthInInches);
+    console.log("height in inches", heightInInches);
+
     setDistance(distanceInMiles);
     // Calculate base prices, additional costs, and weight cost for each category
     const calculatePrice = (
@@ -164,28 +159,29 @@ export default function Form() {
       heightOverBase,
       distance
     ) => {
-      const additionalCost =
-        widthOverBase * 0.001 +
-        lengthOverBase * 0.0015 +
-        heightOverBase * 0.0015;
-      const weightCost = Math.max(0, weight - 30000) * 0.000015; // Example weight cost calculation
+      let additionalCost =
+        widthOverBase * 0.001 * distance +
+        lengthOverBase * 0.001 * distance +
+        heightOverBase * 0.001 * distance +
+        Math.max(0, weight - 30000) * 0.000015 * distance;
 
-      return (
-        (basePrice + additionalCost + weightCost) * distance +
-        (distance < 300 ? distance : 0)
-      );
+      if (distance < 300) {
+        additionalCost += distance;
+      }
+
+      return basePrice * distance + additionalCost;
     };
 
     // Determine base prices and calculate prices for each category
     const lowballPrice = calculatePrice(
-      3.5,
+      4,
       Math.max(0, widthInInches - 108),
       Math.max(0, lengthInInches - 312),
       Math.max(0, heightInInches - 144),
       distanceInMiles
     );
     const averagePrice = calculatePrice(
-      5.0,
+      5,
       Math.max(0, widthInInches - 108),
       Math.max(0, lengthInInches - 312),
       Math.max(0, heightInInches - 144),
@@ -371,11 +367,11 @@ export default function Form() {
                     value={widthInches}
                     onChange={(e) => {
                       if (e.target.value > 11) {
-                        setLengthInches(11);
+                        setWidthInches(11);
                         return;
                       }
                       if (e.target.value < 0) {
-                        setLengthInches(0);
+                        setWidthInches(0);
                         return;
                       }
                       setWidthInches(e.target.value);
